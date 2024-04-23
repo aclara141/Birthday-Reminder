@@ -1,0 +1,2 @@
+Alice,1990-05-15,alice@example.com
+Bob,1985-09-10,bob@example.com
