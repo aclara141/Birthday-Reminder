@@ -14,6 +14,7 @@ class BirthdayReminder:
     def register_user(self, email, password):
         if email in self.users:
             print("User already exists. Please log in.")
+            # my comment <- remove this comment
         else:
             self.users[email] = User(email, password)
             print("User registered successfully.")
