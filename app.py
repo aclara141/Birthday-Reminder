@@ -1,88 +1,151 @@
-import datetime
-import os
+from abc import ABC, abstractmethod
+from datetime import date, timedelta
+
+
+class ReminderSystem:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.users = {}  # Dictionary to store users
+        return cls._instance
+
 
 class User:
-    def __init__(self, email, password):
+    def __init__(self, username, email, password):
+        self.username = username
         self.email = email
         self.password = password
+        self.reminder = BirthdayReminder()
+
+    def add_birthday(self, name, date):
+        self.reminder.add_birthday(name, date)
+
+    def remove_birthday(self, name):
+        self.reminder.remove_birthday(name)
+
+    def print_reminders(self):
+        self.reminder.print_birthdays()
+
+    def save_reminders(self, filename):
+        self.reminder.save_to_file(filename)
+
+    def send_notification(self, message):
+        self.reminder.send_notifications(message)
+
 
 class BirthdayReminder:
     def __init__(self):
-        self.users = {}  # Store users with email as key and User object as value
-        self.birthdays = {}  # Store birthdays with name as key and (birthdate, email) as value
+        self.birthdays = {}
 
-    def register_user(self, email, password):
-        if email in self.users:
-            print("User already exists. Please log in.")
-        else:
-            self.users[email] = User(email, password)
-            print("User registered successfully.")
+    def add_birthday(self, name, date):
+        self.birthdays[name] = date
 
-    def login(self, email, password):
-        if email in self.users and self.users[email].password == password:
-            print("Login successful.")
-            return True
-        else:
-            print("Invalid email or password.")
-            return False
-
-    def add_birthday(self, email, name, birthdate):
-        if email in self.users:
-            self.birthdays[name] = (birthdate, email)
-            print(f"Birthday added successfully for {name}.")
-        else:
-            print("User not found. Please log in.")
-
-    def remove_birthday(self, email, name):
-        if name in self.birthdays and self.birthdays[name][1] == email:
+    def remove_birthday(self, name):
+        if name in self.birthdays:
             del self.birthdays[name]
-            print(f"Birthday removed successfully for {name}.")
-        else:
-            print("Birthday not found or unauthorized.")
 
-    def print_reminders(self):
-        today = datetime.date.today()
-        for name, (birthdate, email) in self.birthdays.items():
-            if birthdate.month == today.month and birthdate.day == today.day:
-                print(f"Today is {name}'s birthday!")
-                self.send_notification(email, f"Happy Birthday, {name}!")
-
-            elif birthdate.month == today.month and birthdate.day - today.day == 14:
-                print(f"Reminder: {name}'s birthday is in two weeks.")
-                self.send_notification(email, f"Your birthday is in two weeks, {name}!")
-
-    def send_notification(self, email, message):
-        print(f"Notification sent to {email}: {message}")
+    def print_birthdays(self):
+        for name, date in self.birthdays.items():
+            print(f"{name}: {date}")
 
     def save_to_file(self, filename):
         with open(filename, 'w') as file:
-            for name, (birthdate, email) in self.birthdays.items():
-                file.write(f"{name},{birthdate},{email}\n")
+            for name, date in self.birthdays.items():
+                file.write(f"{name}: {date}\n")
 
-    def load_from_file(self, filename):
-        if os.path.exists(filename):
-            with open(filename, 'r') as file:
-                for line in file:
-                    name, birthdate_str, email = line.strip().split(',')
-                    birthdate = datetime.datetime.strptime(birthdate_str, "%Y-%m-%d").date()
-                    self.birthdays[name] = (birthdate, email)
+    def send_notifications(self, message):
+        today = date.today()
+        two_weeks_prior = today + timedelta(days=14)
+        for name, b_date in self.birthdays.items():
+            b_month, b_day = map(int, b_date.split('-'))
+            if b_month == two_weeks_prior.month and b_day == two_weeks_prior.day:
+                print(f"Sending two weeks reminder to {name}: {message}")
+            elif b_month == today.month and b_day == today.day:
+                print(f"Sending birthday notification to {name}: {message}")
 
-# Example usage
-reminder = BirthdayReminder()
 
-# Register users
-reminder.register_user("alice@example.com", "password123")
-reminder.register_user("bob@example.com", "securepassword")
+class NotificationService(ABC):
+    @abstractmethod
+    def send_notification(self, message):
+        pass
 
-# Log in
-reminder.login("alice@example.com", "password123")
 
-# Add birthdays
-reminder.add_birthday("alice@example.com", "Alice", datetime.date(1990, 5, 15))
-reminder.add_birthday("bob@example.com", "Bob", datetime.date(1985, 9, 10))
+class EmailNotification(NotificationService):
+    def send_notification(self, message):
+        # Code to send email notification
+        print(f"Email notification sent: {message}")
 
-# Print reminders and send notifications
-reminder.print_reminders()
 
-# Save birthdays to file
-reminder.save_to_file("birthdays.txt")
+class SMSNotification(NotificationService):
+    def send_notification(self, message):
+        # Code to send SMS notification
+        print(f"SMS notification sent: {message}")
+
+
+class Authorization:
+    def __init__(self):
+        self.logged_in_user = None
+
+    def login(self, email, password):
+        # Example: Check email and password against a database or predefined values
+        for user in ReminderSystem()._instance.users.values():
+            if user.email == email and user.password == password:
+                self.logged_in_user = user
+                print(f"Logged in as {user.username}")
+                return
+        print("Invalid email or password")
+
+    def logout(self):
+        self.logged_in_user = None
+        print("Logged out")
+
+    def is_logged_in(self):
+        return self.logged_in_user is not None
+
+    def check_permission(self, required_role):
+        if self.is_logged_in() and self.logged_in_user.role == required_role:
+            return True
+        return False
+
+
+# Usage example
+if __name__ == "__main__":
+    system = ReminderSystem()
+    auth = Authorization()
+
+    # Registration
+    user1 = User("Alice", "alice@example.com", "password1")
+    system.users[user1.email] = user1
+    user2 = User("Bob", "bob@example.com", "password2")
+    system.users[user2.email] = user2
+
+    # Sign-in
+    auth.login("alice@example.com", "password1")
+
+    if auth.is_logged_in():
+        # Adding birthdays (allowed for signed-in users)
+        user1.add_birthday("Alice's Birthday", "04-27")
+        user2.add_birthday("Bob's Birthday", "05-01")
+
+        # Printing reminders
+        user1.print_reminders()
+        user2.print_reminders()
+
+        # Saving reminders (allowed for signed-in users)
+        user1.save_reminders("reminders.txt")
+        user2.save_reminders("reminders.txt")
+
+        # Sending notifications (allowed for signed-in users)
+        email_service = EmailNotification()
+        user1.send_notification("Your birthday is in two weeks")
+        user2.send_notification("Your birthday is in two weeks")
+
+        # Logout
+        auth.logout()
+
+        # Trying unauthorized operation after logout
+        user1.add_birthday("Unauthorized Birthday", "01-01")  # Won't be executed
+    else:
+        print("Please sign-in to perform operations.")
