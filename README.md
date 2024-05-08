@@ -1,5 +1,3 @@
 # Birthday-Reminder
 
-This course work is done by Agina
-
-HERE YOU NEED TO WRITE YOUR COURSE WORKz
+"Say goodbye to the stress of forgetting birthdays with our revolutionary Birthday Reminder app! Keep track of your loved ones' special days effortlessly. Not only can you save their birthdays, but you can also send them heartfelt messages two weeks before their big day and surprise them again on the actual date. Never miss a celebration again and make every birthday memorable with our app!"

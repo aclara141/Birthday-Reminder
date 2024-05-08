@@ -1,0 +1,26 @@
+import unittest
+from unittest.mock import patch
+from io import StringIO
+from datetime import date
+
+
+class TestReminderSystem(unittest.TestCase):
+    def test_user_registration(self):
+        system = ReminderSystem()
+        user1 = User("Alice", "alice@example.com", "password1")
+        system.users[user1.email] = user1
+        self.assertIn(user1.email, system.users)
+
+    def test_login(self):
+        auth = Authorization()
+        auth.login("alice@example.com", "password1")
+        self.assertTrue(auth.is_logged_in())
+
+    def test_add_birthday(self):
+        user = User("Alice", "alice@example.com", "password1")
+        user.add_birthday("Alice's Birthday", "04-27")
+        self.assertIn("Alice's Birthday", user.reminder.birthdays)
+
+if __name__ == "__main__":
+    unittest.main()
+
