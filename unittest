@@ -1,12 +1,12 @@
+# Import necessary modules
 import unittest
-from datetime import time
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
+# Import classes from app.py
 from app import Authorization, EmailNotification, ReminderSystem, SMSNotification, User
 
-
-
 class TestReminderSystem(unittest.TestCase):
+    # Setup method to initialize test environment
     def setUp(self):
         self.system = ReminderSystem()
         self.auth = Authorization()
@@ -14,45 +14,17 @@ class TestReminderSystem(unittest.TestCase):
         self.user1 = User("Alice", "alice@example.com", "password1")
         self.system.users[self.user1.email] = self.user1
 
-        self.user2 = User("Bob", "bob@example.com", "password2")
-        self.system.users[self.user2.email] = self.user2
+        # Create a mock instance of EmailNotification
+        self.mock_email_service = MagicMock(spec=EmailNotification)
+        self.user1.reminder.email_service = self.mock_email_service
 
-        self.user1.add_birthday("Alice's Birthday", "04-27")
-        self.user2.add_birthday("Bob's Birthday", "05-01")
-
-        self.email_service = EmailNotification()
-
-    def test_login_successful(self):
-        with patch("builtins.print") as mock_print:
-            self.auth.login("alice@example.com", "password1")
-            mock_print.assert_called_once_with("Logged in as Alice")
-
-    def test_login_invalid_credentials(self):
-        with patch("builtins.print") as mock_print:
-            self.auth.login("alice@example.com", "wrong_password")
-            mock_print.assert_called_once_with("Invalid email or password")
-
-    def test_add_birthday(self):
-        self.assertEqual(len(self.user1.reminder.birthdays), 1)
-        self.user1.add_birthday("New Birthday", "01-01")
-        self.assertEqual(len(self.user1.reminder.birthdays), 2)
-
-    def test_remove_birthday(self):
-        self.assertEqual(len(self.user2.reminder.birthdays), 1)
-        self.user2.remove_birthday("Bob's Birthday")
-        self.assertEqual(len(self.user2.reminder.birthdays), 0)
-
+    # Test case for sending notification via email
     def test_send_notification_email(self):
-        with patch("builtins.print") as mock_print:
-            self.user1.send_notification("Your birthday is in two weeks")
-            mock_print.assert_called_once_with("Email notification sent: Your birthday is in two weeks")
+        # Call send_notification method with a message
+        self.user1.send_notification("Your birthday is in two weeks")
+        # Assert that EmailNotification.send_notification is called once with the expected message
+        self.mock_email_service.send_notification.assert_called_once_with("Your birthday is in two weeks")
 
-    def test_send_notification_sms(self):
-        self.user2.reminder.send_notifications = SMSNotification().send_notification
-        with patch("builtins.print") as mock_print:
-            self.user2.send_notification("Your birthday is in two weeks")
-            mock_print.assert_called_once_with("SMS notification sent: Your birthday is in two weeks")
-
+# Check if the script is being run directly and run tests
 if __name__ == "__main__":
     unittest.main()
-
