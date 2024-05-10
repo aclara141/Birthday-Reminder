@@ -71,6 +71,11 @@ Conclusion
 This coursework has successfully implemented a Birthday Reminder System in Python, offering efficient reminder management, authentication, and flexible notification options. My Future prospects include integrating more features like recurring reminders and enhancing scalability and user interface design.
 
 
+
+
+NB: Please not if you go to my Clara22 repository you can see the flask app, I am still developing.
+
+
 Work Done by Agina Ferrao
 
 
